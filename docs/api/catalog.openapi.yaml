@@ -1,0 +1,56 @@
+openapi: 3.0.3
+info: { title: Catalog Service, version: 0.1.0, description: "Contract only (built Days 6-9). Base: /api/v1" }
+servers: [{ url: "http://localhost:4002" }]
+paths:
+  /api/v1/categories:
+    get: { summary: List categories (public), responses: { '200': { description: "{data:[{id,name,slug,parentId}]}" } } }
+  /api/v1/products:
+    get:
+      summary: Public product list (only ACTIVE + APPROVED, from APPROVED sellers)
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: category, in: query, schema: { type: string }, description: category slug }
+        - { name: minPrice, in: query, schema: { type: integer } }
+        - { name: maxPrice, in: query, schema: { type: integer } }
+        - { name: sort, in: query, schema: { type: string, enum: [newest, price_asc, price_desc] } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, default: 20, maximum: 50 } }
+      responses:
+        '200':
+          description: Paged products
+          content:
+            application/json:
+              example:
+                data: [{ id: "uuid", name: Wireless Mouse, price: 129900, imageUrl: "https://...", category: { id: "uuid", name: Electronics, slug: electronics }, seller: { id: "uuid", shopName: Tech Hub }, inStock: true }]
+                meta: { page: 1, limit: 20, total: 120 }
+  /api/v1/products/{id}:
+    get:
+      summary: Product detail (stock number comes from inventory-service)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses:
+        '200': { description: "{data:{id,name,description,price,images:[{url,position}],category,seller,stock}}" }
+        '404': { description: Not found }
+  /api/v1/sellers/apply:
+    post: { summary: "Buyer applies to be a seller {shopName, description}", security: [{ bearer: [] }], responses: { '201': { description: Created, status PENDING } } }
+  /api/v1/sellers/me:
+    get: { summary: Own seller profile, security: [{ bearer: [] }], responses: { '200': { description: OK } } }
+    patch: { summary: Update own seller profile, security: [{ bearer: [] }], responses: { '200': { description: OK } } }
+  /api/v1/seller/products:
+    get: { summary: "Own products (any status)", security: [{ bearer: [] }], responses: { '200': { description: OK } } }
+    post:
+      summary: "Create product (seller role, APPROVED seller only)"
+      security: [{ bearer: [] }]
+      requestBody: { content: { application/json: { example: { name: Wireless Mouse, description: "...", price: 129900, categoryId: uuid, imageUrls: ["https://..."], initialStock: 25 } } } }
+      responses: { '201': { description: Created }, '403': { description: Not an approved seller }, '422': { description: Validation error } }
+  /api/v1/seller/products/{id}:
+    patch: { summary: Edit own product (ownership enforced; 404 for others' products), security: [{ bearer: [] }], responses: { '200': { description: OK } } }
+  /api/v1/seller/products/{id}/archive:
+    post: { summary: Archive own product, security: [{ bearer: [] }], responses: { '200': { description: OK } } }
+  /api/v1/admin/sellers:
+    get: { summary: "List sellers (?status=PENDING)", security: [{ bearer: [] }], responses: { '200': { description: OK } } }
+  /api/v1/admin/sellers/{id}/status:
+    patch: { summary: "Approve/suspend {status}", security: [{ bearer: [] }], responses: { '200': { description: OK } } }
+  /api/v1/admin/products/{id}/moderation:
+    patch: { summary: "Approve/hide {moderation}", security: [{ bearer: [] }], responses: { '200': { description: OK } } }
+components:
+  securitySchemes: { bearer: { type: http, scheme: bearer, bearerFormat: JWT } }

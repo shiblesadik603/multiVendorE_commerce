@@ -1,0 +1,35 @@
+openapi: 3.0.3
+info: { title: Order Service, version: 0.1.0, description: "Contract only (built Days 11-16). Checkout orchestrates catalog + inventory; client prices are ignored." }
+servers: [{ url: "http://localhost:4005" }]
+paths:
+  /api/v1/orders:
+    post:
+      summary: Checkout cart -> 1 parent order + 1 seller order per seller (COD)
+      security: [{ bearer: [] }]
+      parameters: [{ name: Idempotency-Key, in: header, required: true, schema: { type: string } }]
+      requestBody:
+        content:
+          application/json:
+            example: { delivery: { name: Rahim, phone: "01712345678", address: "House 1, Road 2", city: Dhaka }, paymentMethod: COD }
+      responses:
+        '201':
+          description: Created (same response replayed for a repeated Idempotency-Key)
+          content:
+            application/json:
+              example:
+                data: { id: uuid, status: PLACED, total: 389700, paymentMethod: COD, sellerOrders: [{ id: uuid, sellerId: uuid, subtotal: 259800, status: PENDING, items: [{ productId: uuid, name: Wireless Mouse, unitPrice: 129900, quantity: 2 }] }] }
+        '409': { description: "INSUFFICIENT_STOCK (details list product ids) or idempotency conflict" }
+        '422': { description: Validation error }
+    get: { summary: "Buyer's orders (paged)", security: [{ bearer: [] }], responses: { '200': { description: OK } } }
+  /api/v1/orders/{id}:
+    get: { summary: "Buyer order detail with status timeline (ownership enforced)", security: [{ bearer: [] }], responses: { '200': { description: OK }, '404': { description: Not found } } }
+  /api/v1/seller/orders:
+    get: { summary: "Seller's own seller-orders (paged, ?status=)", security: [{ bearer: [] }], responses: { '200': { description: OK } } }
+  /api/v1/seller/orders/{id}/status:
+    patch:
+      summary: "Move own seller-order along PENDING->CONFIRMED->SHIPPED->DELIVERED (or CANCELLED)"
+      security: [{ bearer: [] }]
+      requestBody: { content: { application/json: { example: { status: CONFIRMED } } } }
+      responses: { '200': { description: OK }, '404': { description: Not yours }, '409': { description: Invalid transition } }
+components:
+  securitySchemes: { bearer: { type: http, scheme: bearer, bearerFormat: JWT } }
