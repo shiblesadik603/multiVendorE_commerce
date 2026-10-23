@@ -1,4 +1,6 @@
-# Local development database. Credentials are for local use only.
+# Local development stack. Credentials are for local use only.
+# Infra only:        docker compose up -d postgres redis
+# Everything:        docker compose up -d --build
 services:
   postgres:
     image: postgres:16
@@ -8,10 +10,50 @@ services:
       POSTGRES_USER: marketplace
       POSTGRES_PASSWORD: marketplace
       POSTGRES_DB: marketplace
-    ports:
-      - "5432:5432"
+    ports: ["5432:5432"]
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marketplace"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: marketplace-redis
+    restart: unless-stopped
+    ports: ["6379:6379"]
+
+  auth-service:
+    build: ./services/auth-service
+    environment:
+      PORT: 4001
+      DATABASE_URL: postgresql://marketplace:marketplace@postgres:5432/auth_db?schema=public
+      JWT_ACCESS_SECRET: dev-only-secret-change-me-at-least-32-chars
+      CORS_ORIGIN: http://localhost:3000
+    ports: ["4001:4001"]
+    depends_on: { postgres: { condition: service_healthy } }
+
+  catalog-service:
+    build: ./services/catalog-service
+    environment: { PORT: 4002, CORS_ORIGIN: "http://localhost:3000" }
+    ports: ["4002:4002"]
+
+  cart-service:
+    build: ./services/cart-service
+    environment: { PORT: 4003, CORS_ORIGIN: "http://localhost:3000" }
+    ports: ["4003:4003"]
+
+  inventory-service:
+    build: ./services/inventory-service
+    environment: { PORT: 4004, CORS_ORIGIN: "http://localhost:3000" }
+    ports: ["4004:4004"]
+
+  order-service:
+    build: ./services/order-service
+    environment: { PORT: 4005, CORS_ORIGIN: "http://localhost:3000" }
+    ports: ["4005:4005"]
 
 volumes:
   pgdata:

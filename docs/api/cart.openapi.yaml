@@ -1,0 +1,26 @@
+openapi: 3.0.3
+info: { title: Cart Service, version: 0.1.0, description: "Contract only (built Day 10). Buyer role required. Prices come from catalog at read time, never from the client." }
+servers: [{ url: "http://localhost:4003" }]
+paths:
+  /api/v1/cart:
+    get:
+      summary: Current cart with live product details
+      security: [{ bearer: [] }]
+      responses:
+        '200':
+          description: Cart
+          content:
+            application/json:
+              example:
+                data: { items: [{ productId: uuid, name: Wireless Mouse, unitPrice: 129900, quantity: 2, lineTotal: 259800, imageUrl: "https://...", sellerId: uuid, available: true }], subtotal: 259800 }
+  /api/v1/cart/items:
+    post:
+      summary: Add item (increments if present)
+      security: [{ bearer: [] }]
+      requestBody: { content: { application/json: { example: { productId: uuid, quantity: 1 } } } }
+      responses: { '201': { description: Added }, '404': { description: Product unavailable }, '422': { description: "quantity must be 1..99" } }
+  /api/v1/cart/items/{productId}:
+    patch: { summary: "Set quantity {quantity}", security: [{ bearer: [] }], responses: { '200': { description: OK } } }
+    delete: { summary: Remove item, security: [{ bearer: [] }], responses: { '204': { description: Removed } } }
+components:
+  securitySchemes: { bearer: { type: http, scheme: bearer, bearerFormat: JWT } }
