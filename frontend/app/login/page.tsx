@@ -35,10 +35,22 @@ export default function LoginPage() {
 
     setLoading(true);
 
-    // Simulate Auth Success (Day 4 Task requirement)[cite: 3]
+    // Simulate Auth Success
     setTimeout(() => {
       setLoading(false);
       localStorage.setItem('token', 'mock-jwt-token-12345');
+      
+      // FIX: Preserve existing registered role if it exists, or check email, or default to buyer
+      const existingRole = localStorage.getItem('userRole');
+      const role = identifier.toLowerCase().includes('seller') 
+        ? 'seller' 
+        : (existingRole || 'buyer');
+        
+      localStorage.setItem('userRole', role);
+
+      // Broadcast the auth change event so your Navbar updates instantly!
+      window.dispatchEvent(new Event('auth-change'));
+
       alert('Login successful!');
       router.push('/');
     }, 1000);
@@ -84,7 +96,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* MOBILE TAB SWITCHER (Only visible on small screens to prevent long vertical scrolling) */}
+        {/* MOBILE TAB SWITCHER */}
         <div className="flex md:hidden bg-gray-100 p-1 rounded-xl">
           <button
             type="button"

@@ -1,10 +1,52 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMounted(true);
+
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem('token');
+      const role = localStorage.getItem('userRole');
+      if (token) {
+        setIsLoggedIn(true);
+        setUserRole(role);
+      } else {
+        setIsLoggedIn(false);
+        setUserRole(null);
+      }
+    };
+
+    // Check on initial load
+    checkAuthStatus();
+
+    // Listen for custom auth events across the app
+    window.addEventListener('auth-change', checkAuthStatus);
+    window.addEventListener('storage', checkAuthStatus);
+
+    return () => {
+      window.removeEventListener('auth-change', checkAuthStatus);
+      window.removeEventListener('storage', checkAuthStatus);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
+    // Broadcast logout signal
+    window.dispatchEvent(new Event('auth-change'));
+    router.push('/login');
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-[#161616] text-white border-b border-zinc-800 shadow-md">
@@ -35,12 +77,28 @@ export default function Navbar() {
               </svg>
               <span>Cart</span>
             </Link>
-            <Link
-              href="/login"
-              className="bg-zinc-800 text-white hover:bg-zinc-700 px-4 py-2 rounded-md text-sm font-medium transition"
-            >
-              Sign In
-            </Link>
+
+            {/* Dynamic Auth Section gated by isMounted */}
+            {isMounted && isLoggedIn ? (
+              <div className="flex items-center space-x-3">
+                <span className="text-[10px] uppercase bg-zinc-800 text-[#82b440] px-2.5 py-1 rounded font-bold border border-zinc-700 tracking-wider">
+                  {userRole || 'User'}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-600 hover:text-white px-3.5 py-2 rounded-md text-sm font-medium transition"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="bg-zinc-800 text-white hover:bg-zinc-700 px-4 py-2 rounded-md text-sm font-medium transition"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
 
           {/* Mobile Hamburger Button */}
@@ -102,13 +160,25 @@ export default function Navbar() {
             Cart
           </Link>
           <div className="pt-4 border-t border-zinc-800 flex flex-col space-y-2">
-            <Link
-              href="/login"
-              onClick={() => setIsOpen(false)}
-              className="w-full text-center bg-zinc-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-700 transition"
-            >
-              Sign In
-            </Link>
+            {isMounted && isLoggedIn ? (
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  handleLogout();
+                }}
+                className="w-full text-center bg-red-500/10 text-red-400 border border-red-500/20 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 hover:text-white transition"
+              >
+                Logout ({userRole || 'User'})
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setIsOpen(false)}
+                className="w-full text-center bg-zinc-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-700 transition"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       )}
