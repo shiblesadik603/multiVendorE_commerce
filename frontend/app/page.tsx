@@ -1,6 +1,8 @@
 "use client";
 
 import Link from 'next/link';
+import { MOCK_PRODUCTS } from '../data/products';
+import ProductCard from '../components/ProductCard';
 
 export default function HomePage() {
   // Mock Categories based on your layout reference
@@ -15,13 +17,8 @@ export default function HomePage() {
     { name: 'Premium Rice', icon: '🌾', count: '14 Items' },
   ];
 
-  // Mock Products for Top Selling Section
-  const topProducts = [
-    { id: 1, name: 'Organic Wild Forest Honey 500g', price: '$24.00', rating: 4.8, seller: 'GreenValley Store', badge: 'Best Seller' },
-    { id: 2, name: 'Cold Pressed Pure Mustard Oil 1L', price: '$15.50', rating: 4.6, seller: 'Organic Farms', badge: 'Popular' },
-    { id: 3, name: 'Premium Sundried Medjool Dates 1kg', price: '$32.00', rating: 4.9, seller: 'Desert Harvest', badge: 'Sale' },
-    { id: 4, name: 'Handcrafted Organic Spice Blend', price: '$12.00', rating: 4.7, seller: 'SpiceMaster', badge: 'New' },
-  ];
+  // Grab the first 4 products to display as top sellers
+  const topProducts = MOCK_PRODUCTS.slice(0, 4);
 
   return (
     <div className="space-y-12 pb-12">
@@ -102,7 +99,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 3. Top Selling Products Section */}
+      {/* 3. Top Selling Products Section (Integrated with MOCK_PRODUCTS & ProductCard) */}
       <section className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold text-gray-900">Top Selling Products</h2>
@@ -113,39 +110,7 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {topProducts.map((product) => (
-            <div
-              key={product.id}
-              className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition group"
-            >
-              <div>
-                <div className="flex justify-between items-start mb-3">
-                  <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-md">
-                    {product.badge}
-                  </span>
-                  <span className="text-xs text-gray-400">By {product.seller}</span>
-                </div>
-                <div className="h-40 bg-gray-100 rounded-xl mb-4 flex items-center justify-center text-gray-400 group-hover:bg-gray-200 transition">
-                  📦 Product Image
-                </div>
-                <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition">
-                  {product.name}
-                </h3>
-                <div className="flex items-center space-x-1 text-amber-500 text-sm my-1">
-                  <span>★</span>
-                  <span className="font-medium text-gray-700">{product.rating}</span>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-gray-100 flex items-center justify-between mt-4">
-                <span className="text-lg font-extrabold text-gray-900">{product.price}</span>
-                <Link
-                  href="/cart"
-                  className="bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-                >
-                  Add to Cart
-                </Link>
-              </div>
-            </div>
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       </section>
