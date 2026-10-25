@@ -1,6 +1,7 @@
 "use client";
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { Product } from '@/data/products';
 
 interface ProductCardProps {
@@ -8,17 +9,13 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const handleAddToCart = () => {
-    alert(`Added "${product?.title || 'Item'}" to cart!`);
-  };
-
   if (!product) return null;
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col justify-between group">
       
-      {/* Product Image & Category Badge */}
-      <div className="relative h-48 w-full bg-gray-100 overflow-hidden">
+      {/* Product Image & Category Badge (Linked) */}
+      <Link href={`/products/${product.id}`} className="relative h-48 w-full bg-gray-100 overflow-hidden block">
         <Image
           src={product.image}
           alt={product.title}
@@ -29,7 +26,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-gray-800 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm z-10">
           {product.category}
         </span>
-      </div>
+      </Link>
 
       {/* Product Info */}
       <div className="p-4 sm:p-5 flex flex-col grow space-y-2">
@@ -40,9 +37,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           </span>
         </div>
 
-        <h3 className="font-bold text-gray-900 text-sm sm:text-base line-clamp-1 group-hover:text-orange-500 transition-colors">
-          {product.title}
-        </h3>
+        <Link href={`/products/${product.id}`}>
+          <h3 className="font-bold text-gray-900 text-sm sm:text-base line-clamp-1 group-hover:text-orange-500 transition-colors">
+            {product.title}
+          </h3>
+        </Link>
 
         <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
           {product.description}
@@ -56,13 +55,12 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
 
           <div className="flex items-center space-x-2">
-            <button
-              type="button"
-              onClick={handleAddToCart}
-              className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow-sm shadow-orange-500/20 cursor-pointer"
+            <Link
+              href={`/products/${product.id}`}
+              className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow-sm shadow-orange-500/20"
             >
-              Add to Cart
-            </button>
+              View Details
+            </Link>
           </div>
         </div>
 
