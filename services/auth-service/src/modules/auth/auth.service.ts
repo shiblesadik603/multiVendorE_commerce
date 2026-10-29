@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import type { User } from "@prisma/client";
 import { env } from "../../config/env.js";
-import { AppError } from "../../lib/errors.js";
+import { AppError } from "@marketplace/common";
 import { prisma } from "../../lib/prisma.js";
 import type { z } from "zod";
 import type { loginSchema, registerSchema } from "./auth.schemas.js";
