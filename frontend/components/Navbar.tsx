@@ -48,6 +48,9 @@ export default function Navbar() {
     router.push('/login');
   };
 
+  // Check if the current user has a seller role
+  const isSeller = userRole?.toLowerCase() === 'seller' || userRole?.toLowerCase() === 'vendor';
+
   return (
     <header className="sticky top-0 z-50 bg-[#161616] text-white border-b border-zinc-800 shadow-md">
       {/* Top Main Bar */}
@@ -65,6 +68,14 @@ export default function Navbar() {
 
           {/* Right Actions (Desktop) */}
           <div className="hidden md:flex items-center space-x-6 text-sm font-medium text-zinc-300">
+            
+            {/* Conditionally show Seller Dashboard only if logged in as a seller */}
+            {isMounted && isLoggedIn && isSeller && (
+              <Link href="/dashboard/products" className="hover:text-white transition-colors text-orange-400 font-bold">
+                Seller Dashboard
+              </Link>
+            )}
+
             <Link href="/dashboard/seller" className="hover:text-white transition-colors">
               Start Selling
             </Link>
@@ -138,6 +149,18 @@ export default function Navbar() {
       {/* Mobile Menu Dropdown */}
       {isOpen && (
         <div className="md:hidden bg-[#161616] border-t border-zinc-800 px-4 pt-3 pb-6 space-y-3">
+          
+          {/* Conditionally show Seller Dashboard in mobile menu */}
+          {isMounted && isLoggedIn && isSeller && (
+            <Link
+              href="/dashboard/products"
+              onClick={() => setIsOpen(false)}
+              className="block px-3 py-2 rounded-md text-base font-medium text-orange-400 hover:bg-zinc-800 transition"
+            >
+              Seller Dashboard
+            </Link>
+          )}
+
           <Link
             href="/products"
             onClick={() => setIsOpen(false)}

@@ -7,6 +7,7 @@ export interface Product {
   rating: number;
   seller: string;
   description: string;
+  status?: 'Active' | 'Archived' | 'Draft';
 }
 
 export const MOCK_PRODUCTS: Product[] = [
