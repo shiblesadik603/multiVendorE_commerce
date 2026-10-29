@@ -21,3 +21,13 @@ The team switched to `microservices_marketplace_30_day_plan_multi_server`. Front
 - Repo is now an npm workspace; one parameterized Dockerfile (`infra/docker/service.Dockerfile`); compose passes shared dev secrets and Redis URL.
 - Tests: common 15, auth 13, placeholders 4 (all passing). Docs: `docs/architecture/security.md`, `ARCHITECTURE_REPORT.md`.
 - **Next (Day 6):** catalog-service: categories, product CRUD, status, pagination, filters, ownership checks - shaped to the frontend's Product card/detail needs.
+
+## Backend Day 6 (catalog service)
+- catalog-service (Prisma, `catalog_db`): categories, products, product images, seller profiles; migrations incl. base categories.
+- Public API: categories; product list (search, category slug, price range, sort, pagination, limit<=50); product detail. Only ACTIVE + approved products from approved sellers are visible.
+- Seller API (role SELLER): list own, create, get, edit, archive, activate. **Ownership enforced in the query** (other sellers' products -> 404). Suspended sellers blocked (403).
+- Matched to the frontend: field names `title/price/category/imageUrl/seller`, six category slugs, archive/activate for the Active/Archived toggle. Price = integer minor units.
+- Prisma client now generated per service (`src/generated/prisma`) so two Prisma services do not overwrite each other.
+- Verified end to end: a seller token issued by auth-service works on catalog-service.
+- Tests: catalog 19 (+ common 15, auth 13, placeholders 3) passing. Docs: `catalog.openapi.yaml`, `frontend-catalog-integration.md`, `function-reference.md`.
+- **Next (Day 7):** catalog API tests extension, DB indexes review, demo seed products, image URL contract, publish OpenAPI.

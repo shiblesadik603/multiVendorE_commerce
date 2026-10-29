@@ -24,7 +24,7 @@ flowchart TB
   end
   subgraph Backend[Node.js + Express + TypeScript]
     AUTH[auth-service :4001 ✅]
-    CAT[catalog-service :4002 🟡]
+    CAT[catalog-service :4002 ✅ Day 6]
     CART[cart-service :4003 🟡]
     INV[inventory-service :4004 🟡]
     ORD[order-service :4005 🟡]
