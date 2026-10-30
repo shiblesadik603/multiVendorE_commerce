@@ -55,9 +55,11 @@ services:
     environment:
       <<: *common-env
       PORT: 4002
+      DATABASE_URL: postgresql://marketplace:marketplace@postgres:5432/catalog_db?schema=public
     ports: ["4002:4002"]
     depends_on:
       redis: { condition: service_started }
+      postgres: { condition: service_healthy }
 
   cart-service:
     build:
