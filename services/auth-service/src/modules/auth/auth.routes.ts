@@ -1,7 +1,6 @@
 import { Router, type Response } from "express";
-import rateLimit from "express-rate-limit";
+import { rateLimit, requireAuth } from "@marketplace/common";
 import { env } from "../../config/env.js";
-import { requireAuth } from "../../middleware/auth.js";
 import { loginSchema, registerSchema } from "./auth.schemas.js";
 import * as svc from "./auth.service.js";
 
@@ -14,14 +13,12 @@ const cookieOpts = (expires: Date) => ({
   expires,
 });
 
-// In-memory limiter for now; Day 18 replaces it with a Redis-backed shared limiter.
+// Redis-backed so the limit is shared by every instance of auth-service (falls back to memory if Redis is down).
 const authLimiter = rateLimit({
-  windowMs: 15 * 60_000,
-  limit: env.NODE_ENV === "test" ? 1000 : 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (_req, res) =>
-    res.status(429).json({ error: { code: "RATE_LIMITED", message: "Too many attempts, try again later", details: [] } }),
+  name: "auth",
+  windowSeconds: env.AUTH_RATE_LIMIT_WINDOW_SECONDS,
+  max: env.AUTH_RATE_LIMIT_MAX,
+  redisUrl: env.REDIS_URL,
 });
 
 const sendSession = (res: Response, s: Awaited<ReturnType<typeof svc.login>>, status = 200) => {
@@ -50,6 +47,6 @@ authRouter.post("/logout", async (req, res) => {
   res.status(204).end();
 });
 
-authRouter.get("/me", requireAuth, async (req, res) => {
+authRouter.get("/me", requireAuth(env.JWT_ACCESS_SECRET), async (req, res) => {
   res.json({ data: { user: svc.toPublicUser(await svc.getUser(req.user!.id)) } });
 });

@@ -10,8 +10,8 @@ Requirements highlights: ≥2 stateless instances behind a load balancer, Redis 
 | 2 ✅ | Wireframes, contracts | Service diagram, ERD per service, OpenAPI for Auth/Catalog/Cart/Order |
 | 3 ✅ | Next.js + TS + Tailwind shell, routes | TS service template, Dockerfiles, Compose, per-service DBs |
 | 4 ✅ | Login/register screens, validation, auth states | Auth service: hashing, access/refresh tokens, logout, roles, tests |
-| 5 | Protected nav, role-based UI | Central auth middleware, service-to-service auth, Zod, CORS/HTTP security, auth rate limit |
-| 6 | Home + listing (mock), cards, loading | Catalog: categories, product CRUD, status, pagination, filters, ownership |
+| 5 ✅ | Protected nav, role-based UI | Central auth middleware, service-to-service auth, Zod, CORS/HTTP security, auth rate limit |
+| 6 ✅ | Home + listing (mock), cards, loading | Catalog: categories, product CRUD, status, pagination, filters, ownership |
 | 7 | Product details page | Catalog API tests, indexes, seed data, image contract, publish OpenAPI |
 | 8 | Search/filter/sort + URL params | Postgres search/filter baseline, pagination limits |
 | 9 | Seller dashboard + product forms | Seller profile/approval, ownership, admin approve/hide |
