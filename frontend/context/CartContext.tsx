@@ -19,7 +19,6 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  // Initialize state directly from localStorage using a lazy initializer function
   const [cart, setCart] = useState<CartItem[]>(() => {
     if (typeof window === 'undefined') return [];
     try {
@@ -31,14 +30,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('multivendor_cart', JSON.stringify(cart));
   }, [cart]);
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
-      const existingIndex = prev.findIndex((item) => item.id === product.id);
+      // Use String() conversion to prevent type mismatch between string and number IDs
+      const existingIndex = prev.findIndex((item) => String(item.id) === String(product.id));
       if (existingIndex > -1) {
         const updated = [...prev];
         updated[existingIndex].quantity += 1;
@@ -49,7 +48,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const removeFromCart = (productId: number | string) => {
-    setCart((prev) => prev.filter((item) => item.id !== productId));
+    setCart((prev) => prev.filter((item) => String(item.id) !== String(productId)));
   };
 
   const updateQuantity = (productId: number | string, quantity: number) => {
@@ -58,11 +57,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     setCart((prev) =>
-      prev.map((item) => (item.id === productId ? { ...item, quantity } : item))
+      prev.map((item) => (String(item.id) === String(productId) ? { ...item, quantity } : item))
     );
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => {
+    setCart([]);
+    localStorage.removeItem('multivendor_cart');
+  };
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 

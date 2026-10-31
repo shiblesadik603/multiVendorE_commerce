@@ -1,5 +1,5 @@
 "use client";
-
+import { useCart } from '@/context/CartContext';
 import { useState, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -9,6 +9,7 @@ import { MOCK_PRODUCTS } from '../../../data/products';
 // Inner component that safely consumes useParams
 function ProductDetailContent() {
   const params = useParams();
+  const { addToCart } = useCart();
   
   const rawId = params?.id;
   const productId = Number(Array.isArray(rawId) ? rawId[0] : rawId);
@@ -17,6 +18,7 @@ function ProductDetailContent() {
 
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'description' | 'seller'>('description');
+  const [addedMessage, setAddedMessage] = useState(false);
 
   if (!product) {
     return (
@@ -31,7 +33,14 @@ function ProductDetailContent() {
   }
 
   const handleAddToCart = () => {
-    alert(`Successfully added ${quantity} x "${product.title}" to your cart!`);
+    // Pass the product object directly. 
+    // If you want to add the specific quantity selected, we loop or call it matching Product type.
+    for (let i = 0; i < quantity; i++) {
+      addToCart(product);
+    }
+
+    setAddedMessage(true);
+    setTimeout(() => setAddedMessage(false), 2500);
   };
 
   return (
@@ -50,7 +59,7 @@ function ProductDetailContent() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
         
         {/* Product Image Showcase */}
-        <div className="relative h-96 sm:h-[480px] w-full bg-gray-100 rounded-3xl overflow-hidden border border-gray-100 shadow-sm">
+        <div className="relative h-96 sm:h-120 w-full bg-gray-100 rounded-3xl overflow-hidden border border-gray-100 shadow-sm">
           <Image
             src={product.image}
             alt={product.title}
@@ -126,6 +135,12 @@ function ProductDetailContent() {
             >
               Add to Cart — ${(product.price * quantity).toFixed(2)}
             </button>
+
+            {addedMessage && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold text-center rounded-xl animate-fade-in">
+                Successfully added to cart! <Link href="/cart" className="underline ml-1">View Cart →</Link>
+              </div>
+            )}
           </div>
 
         </div>
@@ -178,7 +193,7 @@ function ProductDetailContent() {
   );
 }
 
-// Main page component wrapped in Suspense to satisfy Next.js 16 requirements
+// Main page component wrapped in Suspense to satisfy Next.js requirements
 export default function ProductDetailPage() {
   return (
     <Suspense fallback={<div className="py-20 text-center text-gray-500 font-medium">Loading product details...</div>}>
