@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,12 +9,6 @@ import { useCart } from "../../context/CartContext";
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, subtotal, clearCart } = useCart();
-  
-  // 👈 Fix hydration mismatch by ensuring client-side mount check
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -58,11 +52,6 @@ export default function CheckoutPage() {
       router.push("/products");
     }, 1500);
   };
-
-  // Prevent rendering mismatched HTML during SSR
-  if (!isMounted) {
-    return null;
-  }
 
   if (cart.length === 0) {
     return (
