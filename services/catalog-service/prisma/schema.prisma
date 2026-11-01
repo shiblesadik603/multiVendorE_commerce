@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SellerStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+}
+
+enum ProductStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum Moderation {
+  PENDING
+  APPROVED
+  HIDDEN
+}
+
+/// One row per seller. id = the auth-service user id (no cross-database foreign key).
+model SellerProfile {
+  id        String       @id
+  shopName  String       @map("shop_name")
+  status    SellerStatus @default(APPROVED) // Day 9 switches the default to PENDING + admin approval
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+  products  Product[]
+
+  @@map("seller_profiles")
+}
+
+model Category {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  slug      String     @unique
+  parentId  String?    @map("parent_id")
+  parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryTree")
+  products  Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String        @id @default(uuid())
+  sellerId    String        @map("seller_id")
+  categoryId  String        @map("category_id")
+  title       String
+  description String
+  /// Integer minor units (poisha/cents): 19999 = 199.99
+  price       Int
+  status      ProductStatus @default(ACTIVE)
+  moderation  Moderation    @default(APPROVED) // Day 9 switches the default to PENDING
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  seller      SellerProfile @relation(fields: [sellerId], references: [id])
+  category    Category      @relation(fields: [categoryId], references: [id])
+  images      ProductImage[]
+
+  @@index([categoryId])
+  @@index([sellerId])
+  @@index([status, moderation, createdAt])
+  @@map("products")
+}
+
+model ProductImage {
+  id        String  @id @default(uuid())
+  productId String  @map("product_id")
+  url       String
+  position  Int     @default(0)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_images")
+}

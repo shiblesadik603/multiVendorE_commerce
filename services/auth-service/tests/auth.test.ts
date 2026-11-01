@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { execSync } from "node:child_process";
 import { app } from "../src/app.js";
 import { prisma } from "../src/lib/prisma.js";
-import { requireRole } from "../src/middleware/auth.js";
+import { requireRole } from "@marketplace/common";
 
 const buyer = { name: "Test Buyer", email: "Buyer@Example.com", phone: "01712345678", password: "secret123" };
 
