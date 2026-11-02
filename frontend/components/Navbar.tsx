@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -34,9 +36,18 @@ export default function Navbar() {
     window.addEventListener('auth-change', checkAuthStatus);
     window.addEventListener('storage', checkAuthStatus);
 
+    // Close dropdown when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+
     return () => {
       window.removeEventListener('auth-change', checkAuthStatus);
       window.removeEventListener('storage', checkAuthStatus);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -45,6 +56,7 @@ export default function Navbar() {
     localStorage.removeItem('userRole');
     // Broadcast logout signal
     window.dispatchEvent(new Event('auth-change'));
+    setDropdownOpen(false);
     router.push('/login');
   };
 
@@ -91,16 +103,56 @@ export default function Navbar() {
 
             {/* Dynamic Auth Section gated by isMounted */}
             {isMounted && isLoggedIn ? (
-              <div className="flex items-center space-x-3">
-                <span className="text-[10px] uppercase bg-zinc-800 text-[#82b440] px-2.5 py-1 rounded font-bold border border-zinc-700 tracking-wider">
-                  {userRole || 'User'}
-                </span>
+              <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={handleLogout}
-                  className="bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-600 hover:text-white px-3.5 py-2 rounded-md text-sm font-medium transition"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center space-x-2 focus:outline-none bg-zinc-800 border border-zinc-700 px-3 py-2 rounded-xl hover:bg-zinc-700 transition cursor-pointer"
                 >
-                  Logout
+                  <div className="w-6 h-6 bg-[#82b440] text-gray-900 rounded-full flex items-center justify-center font-black text-xs">
+                    {(userRole?.[0] || 'U').toUpperCase()}
+                  </div>
+                  <span className="text-xs font-bold text-zinc-200 uppercase tracking-wider">
+                    {userRole || 'User'}
+                  </span>
+                  <svg className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
+
+                {/* Account Dropdown Menu */}
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-52 bg-[#1f1f1f] border border-zinc-800 rounded-2xl shadow-xl py-2 z-50">
+                    <div className="px-4 py-2 border-b border-zinc-800">
+                      <p className="text-[10px] text-zinc-400 uppercase tracking-wider font-bold">Logged in as</p>
+                      <p className="text-xs font-bold text-white capitalize">{userRole || 'Customer'}</p>
+                    </div>
+
+                    <Link
+                      href="/orders"
+                      onClick={() => setDropdownOpen(false)}
+                      className="block px-4 py-2.5 text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white transition"
+                    >
+                      📦 My Orders
+                    </Link>
+
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setDropdownOpen(false)}
+                      className="block px-4 py-2.5 text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white transition"
+                    >
+                      ⚙️ Account Dashboard
+                    </Link>
+
+                    <div className="border-t border-zinc-800 pt-1 mt-1">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-xs font-bold text-red-400 hover:bg-red-500/10 transition flex items-center space-x-1"
+                      >
+                        <span>🚪 Logout</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <Link
@@ -182,6 +234,27 @@ export default function Navbar() {
           >
             Cart
           </Link>
+
+          {/* Mobile User Account links */}
+          {isMounted && isLoggedIn && (
+            <div className="pt-2 pb-2 border-t border-zinc-800 space-y-1">
+              <Link
+                href="/orders"
+                onClick={() => setIsOpen(false)}
+                className="block px-3 py-2 rounded-md text-base font-medium text-zinc-200 hover:bg-zinc-800 transition"
+              >
+                📦 My Orders
+              </Link>
+              <Link
+                href="/dashboard"
+                onClick={() => setIsOpen(false)}
+                className="block px-3 py-2 rounded-md text-base font-medium text-zinc-200 hover:bg-zinc-800 transition"
+              >
+                ⚙️ Account Dashboard
+              </Link>
+            </div>
+          )}
+
           <div className="pt-4 border-t border-zinc-800 flex flex-col space-y-2">
             {isMounted && isLoggedIn ? (
               <button
