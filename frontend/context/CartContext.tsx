@@ -5,6 +5,7 @@ import { Product } from '../data/products';
 
 export interface CartItem extends Product {
   quantity: number;
+  stock?: number; // 👈 Explicitly add stock property here
 }
 
 interface CartContextType {
@@ -36,7 +37,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
-      // Use String() conversion to prevent type mismatch between string and number IDs
       const existingIndex = prev.findIndex((item) => String(item.id) === String(product.id));
       if (existingIndex > -1) {
         const updated = [...prev];

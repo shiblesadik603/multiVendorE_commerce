@@ -19,7 +19,9 @@ export default function CheckoutPage() {
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [stockError, setStockError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -38,20 +40,60 @@ export default function CheckoutPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setStockError(null);
+
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
+    const outOfStockItem = cart.find((item) => {
+      const availableStock = item.stock ?? 25;
+      return item.quantity > availableStock;
+    });
+
+    if (outOfStockItem) {
+      const availableStock = outOfStockItem.stock ?? 25;
+      setStockError(
+        `Insufficient stock for "${outOfStockItem.title}". Requested: ${outOfStockItem.quantity}, Available: ${availableStock}.`
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-      alert("Order placed successfully! Thank you for your purchase.");
+      setOrderSuccess(true);
       clearCart();
-      router.push("/products");
     }, 1500);
   };
+
+  if (orderSuccess) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center space-y-6">
+        <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">
+          ✓
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+            Order Confirmed Successfully!
+          </h1>
+          <p className="text-sm text-gray-500">
+            Thank you for your purchase. Your order has been placed and is being processed for shipping.
+          </p>
+        </div>
+        <div className="pt-4">
+          <button
+            onClick={() => router.push("/products")}
+            className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3.5 rounded-xl text-sm shadow-lg shadow-blue-500/25 transition cursor-pointer"
+          >
+            Continue Shopping
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (cart.length === 0) {
     return (
@@ -72,8 +114,16 @@ export default function CheckoutPage() {
         <p className="text-sm text-gray-500 mt-1">Provide your delivery details to complete your order.</p>
       </div>
 
+      {stockError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm font-bold flex items-center justify-between">
+          <span>⚠️ {stockError}</span>
+          <button onClick={() => setStockError(null)} className="text-red-500 hover:text-red-800 text-xs uppercase">
+            Dismiss
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
-        {/* Delivery Form */}
         <form onSubmit={handleSubmit} className="lg:col-span-2 bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
           <h2 className="text-xl font-bold text-gray-900">Delivery Address</h2>
 
@@ -161,11 +211,10 @@ export default function CheckoutPage() {
             disabled={isSubmitting}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl text-sm shadow-lg shadow-blue-500/25 transition cursor-pointer disabled:opacity-50"
           >
-            {isSubmitting ? "Processing Order..." : `Place Order ($${subtotal.toFixed(2)})`}
+            {isSubmitting ? "Validating Inventory & Processing..." : `Place Order ($${subtotal.toFixed(2)})`}
           </button>
         </form>
 
-        {/* Order Summary Sidebar */}
         <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-6 h-fit">
           <h2 className="text-lg font-extrabold text-gray-900 tracking-tight">Order Summary</h2>
 
