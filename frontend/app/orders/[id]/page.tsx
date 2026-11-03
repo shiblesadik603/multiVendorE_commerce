@@ -1,18 +1,34 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
 function OrderDetailContent() {
   const params = useParams();
-  const orderId = params?.id || "ORD-2026-001";
+  const searchParams = useSearchParams();
+
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMounted(true);
+  }, []);
+
+  const orderId = (params?.id as string) || "ORD-2026-001";
+  const paymentQuery = searchParams?.get("payment");
+
+  // Determine payment method label based on query parameter from checkout
+  const paymentMethodLabel =
+    paymentQuery === "MOCK_ONLINE"
+      ? "Mock Online Payment (Testing Only)"
+      : "Cash on Delivery (COD)";
 
   // Mock details for the specific order
   const order = {
     id: orderId,
-    date: "May 15, 2026",
+    date: "May 19, 2026",
     status: "Shipped" as const, // Steps: Pending -> Processing -> Shipped -> Delivered
     shippingAddress: {
       fullName: "John Doe",
@@ -37,6 +53,10 @@ function OrderDetailContent() {
 
   const steps = ["Pending", "Processing", "Shipped", "Delivered"];
   const currentStepIndex = steps.indexOf(order.status);
+
+  if (!isMounted) {
+    return <div className="py-20 text-center text-sm text-gray-400">Loading order details...</div>;
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
@@ -130,12 +150,22 @@ function OrderDetailContent() {
 
           <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-4">
             <h3 className="text-base font-extrabold text-gray-900">Payment Summary</h3>
-            <div className="space-y-2 text-sm border-t border-gray-100 pt-4">
-              <div className="flex justify-between text-gray-600">
+            <div className="space-y-3 text-sm border-t border-gray-100 pt-4">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-600 font-bold">Method</span>
+                <span className={`font-bold px-2.5 py-1 rounded-lg text-[11px] border ${
+                  paymentQuery === "MOCK_ONLINE"
+                    ? "bg-amber-50 text-amber-800 border-amber-200"
+                    : "bg-blue-50 text-blue-700 border-blue-200"
+                }`}>
+                  {paymentMethodLabel}
+                </span>
+              </div>
+              <div className="flex justify-between text-gray-600 text-xs">
                 <span>Subtotal</span>
                 <span className="font-bold text-gray-900">${order.subtotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between text-gray-600 text-xs">
                 <span>Shipping</span>
                 <span className="font-bold text-green-600">Free</span>
               </div>

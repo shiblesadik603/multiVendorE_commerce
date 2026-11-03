@@ -18,6 +18,9 @@ export default function CheckoutPage() {
     postalCode: "",
   });
 
+  // Task 14: Payment method selection state
+  const [paymentMethod, setPaymentMethod] = useState<"COD" | "MOCK_ONLINE">("COD");
+
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [stockError, setStockError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,9 +68,9 @@ export default function CheckoutPage() {
       setIsSubmitting(false);
       clearCart();
 
-      // Generate a unique order reference and immediately redirect to the order detail page & status timeline
+      // Generate a unique order reference and include the payment method
       const newOrderId = `ORD-2026-${Math.floor(100 + Math.random() * 900)}`;
-      router.push(`/orders/${newOrderId}`);
+      router.push(`/orders/${newOrderId}?payment=${paymentMethod}`);
     }, 1500);
   };
 
@@ -87,7 +90,7 @@ export default function CheckoutPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
       <div>
         <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Checkout</h1>
-        <p className="text-sm text-gray-500 mt-1">Provide your delivery details to complete your order.</p>
+        <p className="text-sm text-gray-500 mt-1">Provide your delivery details and choose a payment method to complete your order.</p>
       </div>
 
       {stockError && (
@@ -100,10 +103,12 @@ export default function CheckoutPage() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
-        <form onSubmit={handleSubmit} className="lg:col-span-2 bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-          <h2 className="text-xl font-bold text-gray-900">Delivery Address</h2>
-
+        <form onSubmit={handleSubmit} className="lg:col-span-2 bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-8">
+          
+          {/* Delivery Address Section */}
           <div className="space-y-4">
+            <h2 className="text-xl font-bold text-gray-900">Delivery Address</h2>
+
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Full Name</label>
               <input
@@ -182,12 +187,72 @@ export default function CheckoutPage() {
             </div>
           </div>
 
+          {/* Task 14: Payment Method Selection */}
+          <div className="space-y-4 border-t border-gray-100 pt-6">
+            <h2 className="text-xl font-bold text-gray-900">Select Payment Method</h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Option 1: Cash on Delivery */}
+              <label
+                onClick={() => setPaymentMethod("COD")}
+                className={`flex items-start p-4 border rounded-2xl cursor-pointer transition ${
+                  paymentMethod === "COD"
+                    ? "border-blue-600 bg-blue-50/30 ring-2 ring-blue-500/20"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="COD"
+                  checked={paymentMethod === "COD"}
+                  onChange={() => setPaymentMethod("COD")}
+                  className="mt-1 text-blue-600 focus:ring-blue-500"
+                />
+                <div className="ml-3">
+                  <span className="block text-sm font-bold text-gray-900">💵 Cash on Delivery (COD)</span>
+                  <span className="block text-xs text-gray-500 mt-1">Pay with cash when your parcel is delivered to your doorstep.</span>
+                </div>
+              </label>
+
+              {/* Option 2: Mock Online Payment (Clearly Labeled) */}
+              <label
+                onClick={() => setPaymentMethod("MOCK_ONLINE")}
+                className={`flex items-start p-4 border rounded-2xl cursor-pointer transition ${
+                  paymentMethod === "MOCK_ONLINE"
+                    ? "border-blue-600 bg-blue-50/30 ring-2 ring-blue-500/20"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="MOCK_ONLINE"
+                  checked={paymentMethod === "MOCK_ONLINE"}
+                  onChange={() => setPaymentMethod("MOCK_ONLINE")}
+                  className="mt-1 text-blue-600 focus:ring-blue-500"
+                />
+                <div className="ml-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="block text-sm font-bold text-gray-900">💳 Online Payment</span>
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                      Mock / Testing Only
+                    </span>
+                  </div>
+                  <span className="block text-xs text-gray-500 mt-1">Simulated instant checkout for development and testing.</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
           <button
             type="submit"
             disabled={isSubmitting}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl text-sm shadow-lg shadow-blue-500/25 transition cursor-pointer disabled:opacity-50"
           >
-            {isSubmitting ? "Validating Inventory & Processing..." : `Place Order & Track Timeline ($${subtotal.toFixed(2)})`}
+            {isSubmitting
+              ? "Validating Inventory & Processing..."
+              : `Confirm Order with ${paymentMethod === "COD" ? "COD" : "Mock Payment"} ($${subtotal.toFixed(2)})`}
           </button>
         </form>
 
@@ -223,6 +288,12 @@ export default function CheckoutPage() {
             <div className="flex justify-between text-gray-600">
               <span>Shipping</span>
               <span className="font-bold text-green-600">Free</span>
+            </div>
+            <div className="flex justify-between text-gray-600 border-t border-gray-100 pt-2">
+              <span>Selected Method</span>
+              <span className="font-bold text-gray-900">
+                {paymentMethod === "COD" ? "Cash on Delivery" : "Mock Online Payment"}
+              </span>
             </div>
             <div className="border-t border-gray-100 pt-3 flex justify-between text-base font-extrabold text-gray-900">
               <span>Total</span>
